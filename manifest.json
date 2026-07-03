@@ -16,4 +16,13 @@
     "default_title": "YouTube Shorts Blocker",
     "default_popup": "popup/popup.html"
   }
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "youtube-shorts-blocker@martinbelko",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  }
 }
