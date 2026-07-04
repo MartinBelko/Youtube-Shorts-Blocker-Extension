@@ -20,7 +20,9 @@ function ensureShortsNavHiddenByCss() {
     ytd-guide-renderer a[href="/shorts"],
     ytd-guide-renderer a[href^="/shorts?"],
     ytd-mini-guide-renderer a[href="/shorts"],
-    ytd-mini-guide-renderer a[href^="/shorts?"] {
+    ytd-mini-guide-renderer a[href^="/shorts?"],
+    tp-yt-paper-item.style-scope.ytd-guide-entry-renderer:has(yt-formatted-string.title),
+    tp-yt-paper-item.style-scope.ytd-mini-guide-entry-renderer:has(yt-formatted-string.title) {
       display: none !important;
     }
   `;
@@ -46,15 +48,29 @@ function removeShortsElements() {
     }
   });
 
-  // Specific pass for upper-left guide and mini-guide Shorts buttons.
+  // Specific pass for upper-left guide and mini-guide Shorts buttons by link.
   document
     .querySelectorAll(
       'ytd-guide-renderer a[href="/shorts"], ytd-guide-renderer a[href^="/shorts?"], ytd-mini-guide-renderer a[href="/shorts"], ytd-mini-guide-renderer a[href^="/shorts?"]'
     )
     .forEach((link) => {
-      const navItem = link.closest("ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer");
+      const navItem = link.closest("ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-item");
       if (navItem) {
         navItem.remove();
+      }
+    });
+
+  // Additional pass for guide rows rendered as tp-yt-paper-item with text title "Shorts".
+  document
+    .querySelectorAll(
+      "tp-yt-paper-item.style-scope.ytd-guide-entry-renderer, tp-yt-paper-item.style-scope.ytd-mini-guide-entry-renderer"
+    )
+    .forEach((item) => {
+      const titleNode = item.querySelector("yt-formatted-string.title");
+      const label = titleNode?.textContent?.trim();
+
+      if (label === "Shorts") {
+        item.remove();
       }
     });
 
