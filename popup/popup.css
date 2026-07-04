@@ -6,6 +6,38 @@ body {
   color: #111827;
 }
 
+:root {
+  color-scheme: light dark;
+  --popup-bg: #f4f4f5;
+  --surface-bg: #ffffff;
+  --text-color: #111827;
+  --muted-text: #6b7280;
+  --track-bg: #d4d4d8;
+  --thumb-bg: #ffffff;
+  --focus-ring: #f87171;
+  --shadow-color: rgba(15, 23, 42, 0.08);
+  --thumb-shadow-color: rgba(15, 23, 42, 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --popup-bg: #0f1115;
+    --surface-bg: #1b1f27;
+    --text-color: #f3f4f6;
+    --muted-text: #c0c7d1;
+    --track-bg: #3f4754;
+    --thumb-bg: #f9fafb;
+    --focus-ring: #fca5a5;
+    --shadow-color: rgba(0, 0, 0, 0.35);
+    --thumb-shadow-color: rgba(0, 0, 0, 0.35);
+  }
+}
+
+body {
+  background: var(--popup-bg);
+  color: var(--text-color);
+}
+
 .popup {
   padding: 12px;
 }
@@ -16,8 +48,8 @@ body {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  background: var(--surface-bg);
+  box-shadow: 0 1px 2px var(--shadow-color);
 }
 
 .state-icon {
@@ -42,9 +74,9 @@ h1 {
   margin-top: 10px;
   padding: 10px 12px;
   border-radius: 12px;
-  background: #fff;
+  background: var(--surface-bg);
   font-size: 14px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 2px var(--shadow-color);
 }
 
 .toggle-label {
@@ -71,7 +103,7 @@ h1 {
   width: 42px;
   height: 24px;
   border-radius: 999px;
-  background: #d4d4d8;
+  background: var(--track-bg);
   transition: background-color 0.2s ease;
 }
 
@@ -83,8 +115,8 @@ h1 {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+  background: var(--thumb-bg);
+  box-shadow: 0 1px 2px var(--thumb-shadow-color);
   transition: transform 0.2s ease;
 }
 
@@ -97,12 +129,12 @@ h1 {
 }
 
 .toggle input:focus-visible + .toggle-track {
-  outline: 2px solid #f87171;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
 .status {
   margin: 4px 0 0;
   font-size: 12px;
-  color: #6b7280;
+  color: var(--muted-text);
 }
