@@ -3,6 +3,9 @@
   "name": "YouTube Shorts Blocker",
   "description": "Simple, efficient, and privacy-respecting YouTube Shorts blocker for Firefox.",
   "version": "1.0.0",
+  "icons": {
+    "96": "popup/youtube-shorts-blocker-disabled.png"
+  },
   "permissions": ["storage"],
   "host_permissions": ["https://www.youtube.com/*"],
   "content_scripts": [
@@ -14,7 +17,11 @@
   ],
   "action": {
     "default_title": "YouTube Shorts Blocker",
+    "default_icon": "popup/youtube-shorts-blocker-disabled.png",
     "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "src/background.js"
   },
   "browser_specific_settings": {
     "gecko": {

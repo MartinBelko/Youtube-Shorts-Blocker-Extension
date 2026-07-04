@@ -8,12 +8,27 @@
   </head>
   <body>
     <main class="popup">
-      <h1>YouTube Shorts Blocker</h1>
+      <section class="card" aria-label="Blocker controls">
+        <img
+          id="stateIcon"
+          class="state-icon"
+          src="youtube-shorts-blocker-disabled.png"
+          alt=""
+          width="32"
+          height="32"
+        />
+        <div class="copy">
+          <h1>YouTube Shorts Blocker</h1>
+          <p id="statusText" class="status"></p>
+        </div>
+      </section>
       <label class="toggle-row" for="isActive">
-        <span>Enabled</span>
-        <input id="isActive" type="checkbox" />
+        <span class="toggle-label">Block shorts</span>
+        <span class="toggle">
+          <input id="isActive" type="checkbox" />
+          <span class="toggle-track" aria-hidden="true"></span>
+        </span>
       </label>
-      <p id="statusText" class="status"></p>
     </main>
     <script src="popup.js"></script>
   </body>
