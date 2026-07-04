@@ -5,6 +5,30 @@ let observer = null;
 let cleanupScheduled = false;
 
 /**
+ * Adds a CSS fallback that hides Shorts links in left navigation.
+ */
+function ensureShortsNavHiddenByCss() {
+  const styleId = "yt-shorts-nav-hide-style";
+
+  if (document.getElementById(styleId)) {
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = styleId;
+  style.textContent = `
+    ytd-guide-renderer a[href="/shorts"],
+    ytd-guide-renderer a[href^="/shorts?"],
+    ytd-mini-guide-renderer a[href="/shorts"],
+    ytd-mini-guide-renderer a[href^="/shorts?"] {
+      display: none !important;
+    }
+  `;
+
+  document.documentElement.appendChild(style);
+}
+
+/**
  * Removes Shorts entries/cards/shelves by finding matching nodes and
  * deleting the closest meaningful container.
  */
@@ -21,6 +45,18 @@ function removeShortsElements() {
       link.remove();
     }
   });
+
+  // Specific pass for upper-left guide and mini-guide Shorts buttons.
+  document
+    .querySelectorAll(
+      'ytd-guide-renderer a[href="/shorts"], ytd-guide-renderer a[href^="/shorts?"], ytd-mini-guide-renderer a[href="/shorts"], ytd-mini-guide-renderer a[href^="/shorts?"]'
+    )
+    .forEach((link) => {
+      const navItem = link.closest("ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer");
+      if (navItem) {
+        navItem.remove();
+      }
+    });
 
   // Shorts shelves/carousels explicitly identified by title.
   document.querySelectorAll("ytd-rich-shelf-renderer").forEach((shelf) => {
@@ -63,6 +99,8 @@ function startBlocking() {
   if (observer) {
     return;
   }
+
+  ensureShortsNavHiddenByCss();
 
   observer = new MutationObserver(() => {
     scheduleCleanup();
