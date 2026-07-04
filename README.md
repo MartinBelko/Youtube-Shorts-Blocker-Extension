@@ -9,7 +9,7 @@ A lightweight Firefox extension that hides YouTube Shorts UI elements on YouTube
 
 - Simple popup toggle to enable/disable blocking
 - Disabled by default with matching active/inactive toolbar icons
-- Efficient, event-driven blocking with `MutationObserver`
+- Efficient stylesheet-based blocking that reacts to state and route changes
 - Works with YouTube SPA navigation updates
 - Minimal permissions and local-only preference storage
 
@@ -26,5 +26,5 @@ This extension is privacy-respecting by design:
 
 ## How it works
 
-The content script watches for DOM updates and YouTube route changes, then removes Shorts-related sections/links/cards when enabled.  
-When disabled, the observer is disconnected so active blocking behavior stops cleanly.
+When enabled, the content script injects a CSS stylesheet that hides Shorts-related sections/links/cards and redirects direct `/shorts/...` URLs to the regular watch page.  
+When disabled, the injected stylesheet is removed so hidden elements are restored.
