@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "YouTube Shorts Blocker",
   "description": "Simple, efficient, and privacy-respecting YouTube Shorts blocker for Firefox.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "icons": {
     "96": "popup/youtube-shorts-blocker-disabled.png"
   },
