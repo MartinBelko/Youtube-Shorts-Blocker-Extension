@@ -1,6 +1,6 @@
 const extensionApi = typeof browser !== "undefined" ? browser : chrome;
 
-let isEnabled = true;
+let isEnabled = false;
 let observer = null;
 let cleanupScheduled = false;
 
@@ -103,7 +103,7 @@ function applyEnabledState(nextState) {
 
 async function initialize() {
   const stored = await extensionApi.storage.local.get("isActive");
-  const initialState = stored.isActive !== false;
+  const initialState = stored.isActive === true;
 
   applyEnabledState(initialState);
 
@@ -112,7 +112,7 @@ async function initialize() {
       return;
     }
 
-    applyEnabledState(changes.isActive.newValue !== false);
+    applyEnabledState(changes.isActive.newValue === true);
   });
 
   document.addEventListener("yt-navigate-finish", () => {
