@@ -1,10 +1,7 @@
 const extensionApi = typeof browser !== "undefined" ? browser : chrome;
 
-let isEnabled = false;
-let observer = null;
-let cleanupScheduled = false;
-
-const SHORTS_SELECTORS = `
+const STYLE_ID = "yt-shorts-blocker-style";
+const SHORTS_CSS = `
   ytd-guide-entry-renderer a[title="Shorts"],
   ytd-mini-guide-entry-renderer a[title="Shorts"],
   ytm-pivot-bar-item-renderer a[href="/shorts"],
@@ -26,97 +23,70 @@ const SHORTS_SELECTORS = `
   ytm-rich-item-renderer:has([href^="/shorts/"]),
   ytm-video-with-context-renderer:has([href^="/shorts/"]),
   ytm-grid-video-renderer:has([href^="/shorts/"]),
-  ytd-notification-renderer:has([href^="/shorts/"])
+  ytd-notification-renderer:has([href^="/shorts/"]) {
+    display: none !important;
+  }
 `;
 
 /**
- * Hides Shorts entries/cards/shelves using narrow selectors.
+ * Injects the Shorts blocking stylesheet when enabled.
  */
-function hideShortsElements() {
-  document.querySelectorAll(SHORTS_SELECTORS).forEach((element) => {
-    element.style.display = "none";
-  });
-
-  document
-    .querySelectorAll(
-      "tp-yt-paper-item.style-scope.ytd-guide-entry-renderer, tp-yt-paper-item.style-scope.ytd-mini-guide-entry-renderer"
-    )
-    .forEach((item) => {
-      const titleNode = item.querySelector("yt-formatted-string.title");
-      const label = titleNode?.textContent?.trim();
-
-      if (label === "Shorts") {
-        item.style.display = "none";
-      }
-    });
-}
-
-/**
- * Schedules one cleanup pass for a burst of DOM mutations.
- */
-function scheduleCleanup() {
-  if (!isEnabled || cleanupScheduled) {
+function enableBlocking() {
+  if (document.getElementById(STYLE_ID)) {
     return;
   }
 
-  cleanupScheduled = true;
+  const styleElement = document.createElement("style");
+  styleElement.id = STYLE_ID;
+  styleElement.textContent = SHORTS_CSS;
 
-  requestAnimationFrame(() => {
-    cleanupScheduled = false;
-    hideShortsElements();
-  });
+  (document.head || document.documentElement).appendChild(styleElement);
 }
 
 /**
- * Starts event-driven DOM observation while blocker is enabled.
+ * Removes the injected stylesheet so hidden elements are restored.
  */
-function startBlocking() {
-  if (observer) {
-    return;
-  }
-
-  observer = new MutationObserver(() => {
-    scheduleCleanup();
-  });
-
-  observer.observe(document.body || document.documentElement, {
-    childList: true,
-    subtree: true,
-  });
-
-  scheduleCleanup();
+function disableBlocking() {
+  document.getElementById(STYLE_ID)?.remove();
 }
 
 /**
- * Stops active blocking by disconnecting the observer.
+ * Redirects direct Shorts URLs to the regular watch page.
  */
-function stopBlocking() {
-  if (!observer) {
+function redirectShortsPage() {
+  if (!window.location.pathname.startsWith("/shorts/")) {
     return;
   }
 
-  observer.disconnect();
-  observer = null;
+  const videoId = window.location.pathname.split("/")[2];
+  if (!videoId) {
+    return;
+  }
+
+  const nextUrl = new URL(window.location.href);
+  nextUrl.pathname = "/watch";
+  nextUrl.search = "";
+  nextUrl.searchParams.set("v", videoId);
+
+  window.location.replace(nextUrl.toString());
 }
 
 /**
  * Applies active state and keeps behavior in sync with popup changes.
  */
 function applyEnabledState(nextState) {
-  isEnabled = nextState;
-
-  if (isEnabled) {
-    startBlocking();
-  } else {
-    stopBlocking();
+  if (nextState) {
+    enableBlocking();
+    redirectShortsPage();
+    return;
   }
+
+  disableBlocking();
 }
 
 async function initialize() {
   const stored = await extensionApi.storage.local.get("isActive");
-  const initialState = stored.isActive === true;
-
-  applyEnabledState(initialState);
+  applyEnabledState(stored.isActive === true);
 
   extensionApi.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local" || !changes.isActive) {
@@ -126,9 +96,11 @@ async function initialize() {
     applyEnabledState(changes.isActive.newValue === true);
   });
 
-  document.addEventListener("yt-navigate-finish", () => {
-    if (isEnabled) {
-      scheduleCleanup();
+  document.addEventListener("yt-navigate-finish", async () => {
+    const latestState = await extensionApi.storage.local.get("isActive");
+    if (latestState.isActive === true) {
+      enableBlocking();
+      redirectShortsPage();
     }
   });
 }
