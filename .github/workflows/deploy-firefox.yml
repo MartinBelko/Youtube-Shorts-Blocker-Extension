@@ -1,0 +1,50 @@
+name: Deploy Firefox Extension
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  validate-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Syncs manifest.json version to match your GitHub Release Tag (e.g. v1.0.1 -> 1.0.1)
+      - name: Bump Version in manifest.json
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "Setting manifest.json version to $VERSION"
+          tmp=$(mktemp)
+          jq --arg v "$VERSION" '.version = $v' manifest.json > "$tmp" && mv "$tmp" manifest.json
+
+      - name: Validate Extension (Lint)
+        run: npx web-ext lint --source-dir ./
+
+      - name: Sign and Publish to AMO
+        env:
+          AMO_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          npx web-ext sign \
+            --api-key=$AMO_ISSUER \
+            --api-secret=$AMO_SECRET \
+            --source-dir ./ \
+            --channel=listed \
+            --artifacts-dir=./signed-artifacts
+
+      - name: Upload .xpi to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.ref_name }} ./signed-artifacts/*.xpi --clobber
