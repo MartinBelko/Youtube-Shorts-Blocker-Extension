@@ -4,63 +4,39 @@ let isEnabled = false;
 let observer = null;
 let cleanupScheduled = false;
 
+const SHORTS_SELECTORS = `
+  ytd-guide-entry-renderer a[title="Shorts"],
+  ytd-mini-guide-entry-renderer a[title="Shorts"],
+  ytm-pivot-bar-item-renderer a[href="/shorts"],
+  ytm-pivot-bar-item-renderer:has(.pivot-shorts),
+  ytd-reel-shelf-renderer,
+  ytd-rich-shelf-renderer:has([href*="/shorts/"]),
+  ytm-reel-shelf-renderer,
+  ytm-rich-section-renderer:has([href^="/shorts/"]),
+  grid-shelf-view-model:has([href^="/shorts/"]),
+  ytd-rich-grid-group:has([href^="/shorts/"]),
+  [href^="/shorts/"],
+  ytd-reel-item-renderer,
+  ytm-reel-item-renderer,
+  ytm-shorts-lockup-view-model,
+  ytd-rich-item-renderer:has([href^="/shorts/"]),
+  ytd-video-renderer:has([href^="/shorts/"]),
+  ytd-grid-video-renderer:has([href^="/shorts/"]),
+  ytd-compact-video-renderer:has([href^="/shorts/"]),
+  ytm-rich-item-renderer:has([href^="/shorts/"]),
+  ytm-video-with-context-renderer:has([href^="/shorts/"]),
+  ytm-grid-video-renderer:has([href^="/shorts/"]),
+  ytd-notification-renderer:has([href^="/shorts/"])
+`;
+
 /**
- * Adds a CSS fallback that hides Shorts links in left navigation.
+ * Hides Shorts entries/cards/shelves using narrow selectors.
  */
-function ensureShortsNavHiddenByCss() {
-  const styleId = "yt-shorts-nav-hide-style";
-
-  if (document.getElementById(styleId)) {
-    return;
-  }
-
-  const style = document.createElement("style");
-  style.id = styleId;
-  style.textContent = `
-    ytd-guide-renderer a[href="/shorts"],
-    ytd-guide-renderer a[href^="/shorts?"],
-    ytd-mini-guide-renderer a[href="/shorts"],
-    ytd-mini-guide-renderer a[href^="/shorts?"],
-    tp-yt-paper-item.style-scope.ytd-guide-entry-renderer:has(yt-formatted-string.title),
-    tp-yt-paper-item.style-scope.ytd-mini-guide-entry-renderer:has(yt-formatted-string.title) {
-      display: none !important;
-    }
-  `;
-
-  document.documentElement.appendChild(style);
-}
-
-/**
- * Removes Shorts entries/cards/shelves by finding matching nodes and
- * deleting the closest meaningful container.
- */
-function removeShortsElements() {
-  // Navigation entries and cards that link to /shorts/
-  document.querySelectorAll('a[href^="/shorts"], a[href*="/shorts/"]').forEach((link) => {
-    const container = link.closest(
-      "ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, ytd-rich-item-renderer, ytd-video-renderer, ytd-grid-video-renderer, ytd-compact-video-renderer"
-    );
-
-    if (container) {
-      container.remove();
-    } else {
-      link.remove();
-    }
+function hideShortsElements() {
+  document.querySelectorAll(SHORTS_SELECTORS).forEach((element) => {
+    element.style.display = "none";
   });
 
-  // Specific pass for upper-left guide and mini-guide Shorts buttons by link.
-  document
-    .querySelectorAll(
-      'ytd-guide-renderer a[href="/shorts"], ytd-guide-renderer a[href^="/shorts?"], ytd-mini-guide-renderer a[href="/shorts"], ytd-mini-guide-renderer a[href^="/shorts?"]'
-    )
-    .forEach((link) => {
-      const navItem = link.closest("ytd-guide-entry-renderer, ytd-mini-guide-entry-renderer, tp-yt-paper-item");
-      if (navItem) {
-        navItem.remove();
-      }
-    });
-
-  // Additional pass for guide rows rendered as tp-yt-paper-item with text title "Shorts".
   document
     .querySelectorAll(
       "tp-yt-paper-item.style-scope.ytd-guide-entry-renderer, tp-yt-paper-item.style-scope.ytd-mini-guide-entry-renderer"
@@ -70,26 +46,9 @@ function removeShortsElements() {
       const label = titleNode?.textContent?.trim();
 
       if (label === "Shorts") {
-        item.remove();
+        item.style.display = "none";
       }
     });
-
-  // Shorts shelves/carousels explicitly identified by title.
-  document.querySelectorAll("ytd-rich-shelf-renderer").forEach((shelf) => {
-    const title =
-      shelf.querySelector("#title")?.textContent?.trim() ||
-      shelf.querySelector("h2")?.textContent?.trim() ||
-      "";
-
-    if (title === "Shorts") {
-      shelf.remove();
-    }
-  });
-
-  // Watch-page Shorts shelf.
-  document.querySelectorAll("ytd-reel-shelf-renderer, ytm-shorts-lockup-view-model, ytd-shorts").forEach((node) => {
-    node.remove();
-  });
 }
 
 /**
@@ -104,7 +63,7 @@ function scheduleCleanup() {
 
   requestAnimationFrame(() => {
     cleanupScheduled = false;
-    removeShortsElements();
+    hideShortsElements();
   });
 }
 
@@ -116,13 +75,11 @@ function startBlocking() {
     return;
   }
 
-  ensureShortsNavHiddenByCss();
-
   observer = new MutationObserver(() => {
     scheduleCleanup();
   });
 
-  observer.observe(document.documentElement, {
+  observer.observe(document.body || document.documentElement, {
     childList: true,
     subtree: true,
   });
