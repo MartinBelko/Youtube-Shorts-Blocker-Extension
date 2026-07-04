@@ -40,7 +40,7 @@ jobs:
             --api-key=$AMO_ISSUER \
             --api-secret=$AMO_SECRET \
             --source-dir ./ \
-            --channel=listed \
+            --channel=unlisted \
             --artifacts-dir=./signed-artifacts
 
       - name: Upload .xpi to GitHub Release
